@@ -1,0 +1,57 @@
+# PostgreSQL Rules File (rules.mdc)
+# Updated: Supports Uppercase Table/Column Names
+# Enforces quoting of all identifiers to avoid case-sensitivity issues
+
+[general]
+allow_comments = true
+enforce_semicolon = true
+quote_identifiers = true
+strict_mode = true
+
+[naming]
+# Don't enforce lowercase; allow existing uppercase identifiers
+enforce_snake_case = false
+disallow_camel_case = false
+allow_uppercase_identifiers = true
+
+[quoting]
+# PostgreSQL requires quoting if identifiers use uppercase letters
+require_double_quotes_for_identifiers = true
+
+# Enforce this throughout DDL/DML
+enforce_quoted_table_names = true
+enforce_quoted_column_names = true
+
+# Examples:
+# SELECT "Name" FROM "Users";
+# INSERT INTO "UserLog" ("UserID", "Timestamp") VALUES (1, NOW());
+
+[ddl]
+# Quote all DDL identifiers
+enforce_quoted_table_names = true
+enforce_quoted_column_names = true
+
+[dml]
+# Quote all DML identifiers
+enforce_quoted_dml_identifiers = true
+
+[constraints]
+enforce_named_constraints = true
+disallow_unnamed_primary_keys = false
+disallow_unnamed_foreign_keys = false
+
+[indexes]
+enforce_named_indexes = true
+
+[types]
+default_text_type = TEXT
+default_int_type = INTEGER
+disallow_serial = false
+
+[performance]
+suggest_indexes_on_foreign_keys = true
+suggest_indexes_on_where_columns = true
+
+[schema]
+require_schema_prefix = false
+default_schema = public
