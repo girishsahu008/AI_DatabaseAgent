@@ -76,6 +76,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'test_connection':
         return await databaseManager.testConnection();
       
+      case 'get_access_mode':
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Current database access mode: ${databaseManager.accessMode}\n\nThis determines what types of SQL operations are allowed:\n- 'readonly': Only SELECT queries are allowed\n- 'full': All SQL operations including DDL/DML are allowed (use with caution)`,
+            },
+          ],
+        };
+      
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -173,13 +183,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'execute_query',
-        description: 'Execute a read-only SQL query on the database',
+        description: 'Execute a SQL query on the database. Query type allowed depends on DB_ACCESS_MODE setting.',
         inputSchema: {
           type: 'object',
           properties: {
             query: {
               type: 'string',
-              description: 'SQL query to execute (read-only only)',
+              description: 'SQL query to execute. Type depends on access mode: readonly (SELECT only) or full (all operations)',
             },
           },
           required: ['query'],
@@ -188,6 +198,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'test_connection',
         description: 'Test the database connection and SSH tunnel',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: [],
+        },
+      },
+      {
+        name: 'get_access_mode',
+        description: 'Get the current database access mode (readonly or full) and explanation of what operations are allowed',
         inputSchema: {
           type: 'object',
           properties: {},

@@ -19,6 +19,7 @@ export class DatabaseManager {
     this.sshClient = null;
     this.localServer = null;
     this.isConnected = false;
+    this.accessMode = process.env.DB_ACCESS_MODE || 'readonly';
   }
 
   async initialize() {
@@ -194,14 +195,13 @@ export class DatabaseManager {
         throw new Error('Database client not initialized');
       }
 
-      // Validate that this is a read-only query
-      const normalizedQuery = query.trim().toLowerCase();
-      const forbiddenKeywords = ['insert', 'update', 'delete', 'drop', 'create', 'alter', 'truncate'];
-      
-      for (const keyword of forbiddenKeywords) {
-        if (normalizedQuery.includes(keyword)) {
-          throw new Error(`Query contains forbidden keyword: ${keyword}. Only read-only queries are allowed.`);
-        }
+      // Validate query based on access mode
+      if (this.accessMode === 'readonly') {
+        this.validateReadOnlyQuery(query);
+      } else if (this.accessMode === 'full') {
+        this.validateFullAccessQuery(query);
+      } else {
+        throw new Error(`Invalid DB_ACCESS_MODE: ${this.accessMode}. Use 'readonly' or 'full'`);
       }
 
       const result = await this.client.query(query);
@@ -220,6 +220,34 @@ export class DatabaseManager {
       };
     } catch (error) {
       throw new Error(`Query execution failed: ${error.message}`);
+    }
+  }
+
+  validateReadOnlyQuery(query) {
+    const normalizedQuery = query.trim().toLowerCase();
+    const forbiddenKeywords = ['insert', 'update', 'delete', 'drop', 'create', 'alter', 'truncate'];
+    
+    for (const keyword of forbiddenKeywords) {
+      if (normalizedQuery.includes(keyword)) {
+        throw new Error(`Query contains forbidden keyword: ${keyword}. Only read-only queries are allowed.`);
+      }
+    }
+  }
+
+  validateFullAccessQuery(query) {
+    const normalizedQuery = query.trim().toLowerCase();
+    
+    // Check for multiple statements (prevent injection)
+    if (normalizedQuery.includes(';') && normalizedQuery.split(';').filter(stmt => stmt.trim()).length > 1) {
+      throw new Error('Multiple SQL statements are not allowed. Please execute one query at a time.');
+    }
+
+    // Basic safety check - warn about dangerous operations
+    const dangerousKeywords = ['drop', 'truncate', 'delete'];
+    for (const keyword of dangerousKeywords) {
+      if (normalizedQuery.includes(keyword)) {
+        console.warn(`⚠️  WARNING: Executing potentially dangerous operation: ${keyword.toUpperCase()}`);
+      }
     }
   }
 

@@ -11,13 +11,7 @@ export class QueryExecutor {
         throw new Error('Query parameter is required and must be a string');
       }
 
-      // Validate that this is a read-only query
-      const validationResult = this.validateReadOnlyQuery(query);
-      if (!validationResult.isValid) {
-        throw new Error(validationResult.error);
-      }
-
-      // Execute the query through the database manager
+      // Execute the query through the database manager (validation is handled there)
       const result = await this.databaseManager.executeQuery(query);
       
       return result;
