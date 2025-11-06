@@ -120,6 +120,10 @@ schema_explained.md
 *.cache
 *.tmp
 
+# Chat context files (user-specific conversation data)
+chat_contexts/
+*.context.json
+
 # Test files
 test-results/
 coverage/

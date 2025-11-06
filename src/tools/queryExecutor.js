@@ -1,11 +1,16 @@
 export class QueryExecutor {
-  constructor(databaseManager) {
+  constructor(databaseManager, contextManager = null) {
     this.databaseManager = databaseManager;
+    this.contextManager = contextManager;
+  }
+
+  setContextManager(contextManager) {
+    this.contextManager = contextManager;
   }
 
   async executeQuery(args) {
     try {
-      const { query } = args;
+      const { query, purpose } = args;
       
       if (!query || typeof query !== 'string') {
         throw new Error('Query parameter is required and must be a string');
@@ -13,6 +18,33 @@ export class QueryExecutor {
 
       // Execute the query through the database manager (validation is handled there)
       const result = await this.databaseManager.executeQuery(query);
+      
+      // Track query in context manager if available
+      if (this.contextManager) {
+        try {
+          // Extract row count from result if available
+          let rowsReturned = null;
+          if (result && result.content && result.content[0]) {
+            // Extract row count from result text (format: "Query executed successfully. Rows returned: X")
+            const resultText = result.content[0].text || '';
+            const rowMatch = resultText.match(/Rows returned:\s*(\d+)/i);
+            if (rowMatch) {
+              rowsReturned = parseInt(rowMatch[1]);
+            } else {
+              // Try alternative patterns
+              const altMatch = resultText.match(/(\d+)\s+row/i);
+              if (altMatch) {
+                rowsReturned = parseInt(altMatch[1]);
+              }
+            }
+          }
+          
+          this.contextManager.trackQuery(query, rowsReturned, purpose || 'Query execution');
+        } catch (trackError) {
+          // Don't fail query execution if tracking fails
+          console.error('Failed to track query:', trackError.message);
+        }
+      }
       
       return result;
     } catch (error) {
