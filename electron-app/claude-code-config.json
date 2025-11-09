@@ -1,0 +1,28 @@
+{
+  "mcp": {
+    "servers": {
+      "postgresql-mcp": {
+        "url": "http://localhost:3001",
+        "transport": "http",
+        "tools": [
+          "list_tables",
+          "get_schema",
+          "execute_query",
+          "get_relationships",
+          "analyze_data"
+        ]
+      }
+    }
+  },
+  "claude": {
+    "model": "claude-3-5-sonnet-20241022",
+    "temperature": 0.7,
+    "max_tokens": 4096
+  },
+  "privacy": {
+    "dataLocation": "local",
+    "enableTelemetry": false,
+    "allowExternalConnections": false
+  }
+}
+

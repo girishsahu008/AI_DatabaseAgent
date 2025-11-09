@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "postgresql": {
+      "command": "node",
+      "args": ["D:\\AI\\MCPDatabase\\src\\index.js"],
+      "description": "PostgreSQL database MCP server with context persistence"
+    }
+  }
+}
+

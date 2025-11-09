@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PostgreSQL MCP Desktop</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #252526;
+      padding: 1rem;
+      border-bottom: 1px solid #3e3e42;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f48771;
+    }
+
+    .status-indicator.active {
+      background: #4ec9b0;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 300px;
+      background: #252526;
+      border-right: 1px solid #3e3e42;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 1rem;
+      border-bottom: 1px solid #3e3e42;
+    }
+
+    .sidebar-section h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #cccccc;
+    }
+
+    .tool-list {
+      list-style: none;
+    }
+
+    .tool-item {
+      padding: 0.5rem;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-bottom: 0.25rem;
+      transition: background 0.2s;
+    }
+
+    .tool-item:hover {
+      background: #2d2d30;
+    }
+
+    .tool-item.active {
+      background: #094771;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tool-panel {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .tool-form {
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: #cccccc;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.5rem;
+      background: #1e1e1e;
+      border: 1px solid #3e3e42;
+      border-radius: 4px;
+      color: #d4d4d4;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      background: #0e639c;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #1177bb;
+    }
+
+    .btn:disabled {
+      background: #3e3e42;
+      cursor: not-allowed;
+    }
+
+    .results {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #1e1e1e;
+      border: 1px solid #3e3e42;
+      border-radius: 4px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .results pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .error {
+      color: #f48771;
+    }
+
+    .success {
+      color: #4ec9b0;
+    }
+
+    .loading {
+      color: #dcdcaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>PostgreSQL MCP Desktop</h1>
+    <div class="status">
+      <div class="status-indicator" id="statusIndicator"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <h2>Available Tools</h2>
+        <ul class="tool-list" id="toolList">
+          <li class="tool-item loading">Loading tools...</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="tool-panel" id="toolPanel">
+        <p>Select a tool from the sidebar to get started.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
+

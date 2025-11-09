@@ -9,7 +9,10 @@
     "dev": "node --watch src/index.js",
     "test": "node test-connection.js",
     "test:connection": "node test-connection.js",
-    "test:context": "node test-context-features.js"
+    "test:context": "node test-context-features.js",
+    "claude-bridge": "node claude-code-bridge-server.cjs",
+    "electron:dev": "cd electron-app && npm run dev",
+    "electron:build": "cd electron-app && npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.4.0",
