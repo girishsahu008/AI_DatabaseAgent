@@ -224,19 +224,22 @@ export class ContextManager {
         };
       }
 
+      // Store the list for index-based loading
+      this._contextsList = files.filter(f => !f.error);
+
       const contextsList = files.map((ctx, index) => {
         if (ctx.error) {
           return `${index + 1}. ${ctx.filename} - ERROR: ${ctx.error}`;
         }
         const date = new Date(ctx.createdAt).toLocaleString();
-        return `${index + 1}. ${ctx.sessionName} (${ctx.sessionId})\n   Created: ${date}\n   Summary: ${ctx.summary || 'No summary'}\n   Queries: ${ctx.queriesCount}, Findings: ${ctx.findingsCount}\n   File: ${ctx.filename}`;
+        return `${index + 1}. ${ctx.sessionName} (${ctx.sessionId})\n   Created: ${date}\n   Summary: ${ctx.summary || 'No summary'}\n   Queries: ${ctx.queriesCount}, Findings: ${ctx.findingsCount}\n   💡 You can load this by number: ${index + 1}, name: "${ctx.sessionName}", or ID: "${ctx.sessionId}"`;
       }).join('\n\n');
 
       return {
         content: [
           {
             type: 'text',
-            text: `Saved Contexts (${files.length} total):\n\n${contextsList}`,
+            text: `📚 Saved Contexts (${files.length} total):\n\n${contextsList}\n\n💡 To load a context, you can use:\n   - The number (e.g., "load context 1")\n   - The session name (e.g., "load sales_analysis")\n   - The session ID (e.g., "2024-11-06_14-30-45")`,
           },
         ],
       };
@@ -246,35 +249,75 @@ export class ContextManager {
   }
 
   // Load a specific context
-  async loadContext(sessionIdOrName) {
+  async loadContext(sessionIdOrNameOrIndex) {
     try {
       if (!existsSync(this.contextsDir)) {
         throw new Error('No contexts directory found');
       }
 
       const files = readdirSync(this.contextsDir)
-        .filter(file => file.startsWith('context_') && file.endsWith('.json'));
+        .filter(file => file.startsWith('context_') && file.endsWith('.json'))
+        .map(file => {
+          const filepath = join(this.contextsDir, file);
+          try {
+            const content = JSON.parse(readFileSync(filepath, 'utf8'));
+            return {
+              ...content,
+              filename: file,
+            };
+          } catch (error) {
+            return null;
+          }
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          }
+          return 0;
+        });
 
       let contextFile = null;
 
-      // Try to find by sessionId or sessionName
-      for (const file of files) {
-        const filepath = join(this.contextsDir, file);
-        try {
-          const content = JSON.parse(readFileSync(filepath, 'utf8'));
-          if (content.sessionId === sessionIdOrName || 
-              content.sessionName === sessionIdOrName ||
-              file.includes(sessionIdOrName)) {
-            contextFile = content;
+      // Try to parse as index number first
+      const indexMatch = String(sessionIdOrNameOrIndex).match(/^(\d+)$/);
+      if (indexMatch) {
+        const index = parseInt(indexMatch[1]) - 1; // Convert to 0-based index
+        if (index >= 0 && index < files.length) {
+          contextFile = files[index];
+        } else {
+          throw new Error(`Context index ${indexMatch[1]} is out of range. Please use a number between 1 and ${files.length}. Use list_saved_contexts to see available contexts.`);
+        }
+      } else {
+        // Try to find by sessionId, sessionName, or filename
+        const searchTerm = String(sessionIdOrNameOrIndex).toLowerCase();
+        for (const file of files) {
+          if (file.sessionId === sessionIdOrNameOrIndex || 
+              file.sessionId.toLowerCase() === searchTerm ||
+              file.sessionName === sessionIdOrNameOrIndex ||
+              file.sessionName.toLowerCase() === searchTerm ||
+              file.filename.toLowerCase().includes(searchTerm)) {
+            contextFile = file;
             break;
           }
-        } catch (error) {
-          continue;
         }
       }
 
       if (!contextFile) {
-        throw new Error(`Context not found: ${sessionIdOrName}`);
+        // Provide helpful error message with suggestions
+        const suggestions = files.slice(0, 5).map((f, i) => 
+          `  ${i + 1}. "${f.sessionName}" (ID: ${f.sessionId})`
+        ).join('\n');
+        
+        throw new Error(
+          `Context not found: "${sessionIdOrNameOrIndex}"\n\n` +
+          `Available contexts:\n${suggestions}\n\n` +
+          `💡 You can load by:\n` +
+          `   - Number: Use the number from the list (e.g., "1")\n` +
+          `   - Name: Use the session name (e.g., "${files[0]?.sessionName || 'session_name'}")\n` +
+          `   - ID: Use the session ID (e.g., "${files[0]?.sessionId || '2024-11-06_14-30-45'}")\n\n` +
+          `Use list_saved_contexts to see all available contexts.`
+        );
       }
 
       // Format context for display
